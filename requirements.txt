@@ -33,7 +33,7 @@ GitPython==3.1.17
 google-auth-oauthlib==0.4.2
 google-pasta==0.2.0
 grpcio==1.32.0
-h5py==3.2.1
+h5py
 huggingface-hub==0.0.8
 idna==2.10
 importlib-metadata==4.5.0
