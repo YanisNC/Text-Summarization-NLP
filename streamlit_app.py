@@ -44,13 +44,16 @@ if customize:
             _length_sentences = 5
             _length_sentences = st.number_input("length (in sentences)", value=_length_sentences)
     else:
-        model_name = st.selectbox('Select the model', ('BART', 'T5', 'PEGASUS'))
+        model_name = st.selectbox('Select the model', ('BART', 'T5', 'LED', 'PEGASUS'))
 
         if model_name == 'BART':
             _model = "facebook/bart-large-cnn"
             _max_input_length = 512
         elif model_name == 'T5':
             _model = "t5-small"
+            _max_input_length = 512
+        elif model_name == 'LED':
+            _model = "patrickvonplaten/longformer2roberta-cnn_dailymail-fp16"
             _max_input_length = 512
         elif model_name == 'PEGASUS':
             sub_model_name = st.selectbox('Select the pre-trained model', ('Large', 'Bigbird', 'CNN / Dailymail', 'x-sum'))
@@ -107,15 +110,20 @@ def scrap_web2(link):
     return (soup.text.strip()).encode('ascii', 'ignore').decode("utf-8")
 
 
-def preprocessing(article_text):
+def preprocessing(text_input):
     # Removing Square Brackets
-    article_text = re.sub(r'\[[0-9]*\]', '', article_text)
-    article_text = re.sub(r'\[[a-zA-Z]*\]', '', article_text)
+    text_input = re.sub(r'\[[0-9]*\]', '', text_input)
+    text_input = re.sub(r'\[[a-zA-Z]*\]', '', text_input)
 
     # Removing Extra Spaces
-    article_text = re.sub(r'\s+', ' ', article_text)  # 1 ore more whitespace characters
+    text_input = re.sub(r'\s+', ' ', text_input)  # 1 ore more whitespace characters
 
-    return article_text
+    return text_input
+
+
+def postprocessing(text_input):
+    text_input = re.sub(r'[<][a-zA-Z][>]', ' ', text_input)
+    return text_input
 
 
 def extractive_summary(input_text, num_tokens, tokenizer):
@@ -153,6 +161,12 @@ def run_model(input_text):
             model = T5ForConditionalGeneration.from_pretrained(_model)
             tokenizer = T5Tokenizer.from_pretrained(_model)
 
+        elif model_name == "LED":
+            from transformers import LongformerTokenizer, EncoderDecoderModel
+
+            model = EncoderDecoderModel.from_pretrained(_model)
+            tokenizer = LongformerTokenizer.from_pretrained("allenai/longformer-base-4096")
+
         elif model_name == "PEGASUS":
             from transformers import PegasusTokenizer, PegasusForConditionalGeneration
 
@@ -166,7 +180,7 @@ def run_model(input_text):
         output = summarizer(input_text, min_length=_min_length, max_length=_max_length)
 
         st.write('Summary')
-        st.success(output[0]['summary_text'])
+        st.success(postprocessing(output[0]['summary_text']))
 
     else:
         if extractive_name == 'TextRank':
@@ -194,7 +208,7 @@ def run_model(input_text):
             output = ' '.join(sent_list)
 
         st.write('Summary')
-        st.success(output)
+        st.success(postprocessing(output))
 
 
 if st.button('Submit'):
