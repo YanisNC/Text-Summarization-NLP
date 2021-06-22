@@ -5,8 +5,6 @@ import urllib.request
 import re
 import time
 import nltk
-import gensim
-import sumy
 import validators
 
 from gensim.summarization import summarize as textrank_summarize
@@ -19,11 +17,7 @@ from sumy.summarizers.lex_rank import LexRankSummarizer
 from sumy.summarizers.lsa import LsaSummarizer
 from sumy.summarizers.kl import KLSummarizer
 
-from nltk.tokenize import word_tokenize
 from transformers import pipeline
-
-# from transformers import BartTokenizer, BartForConditionalGeneration
-# from transformers import T5Tokenizer, T5ForConditionalGeneration
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -44,21 +38,40 @@ if customize:
             _length_sentences = 5
             _length_sentences = st.number_input("length (in sentences)", value=_length_sentences)
     else:
-        model_name = st.selectbox('Select the model', ('BART', 'T5', 'LED', 'PEGASUS'))
+        model_name = st.selectbox('Select the model', ('BART', 'T5', 'Longformer', 'PEGASUS'))
 
         if model_name == 'BART':
-            _model = "facebook/bart-large-cnn"
-            _max_input_length = 512
-        elif model_name == 'T5':
-            _model = "t5-small"
-            _max_input_length = 512
-        elif model_name == 'LED':
-            _model = "patrickvonplaten/longformer2roberta-cnn_dailymail-fp16"
-            _max_input_length = 512
-        elif model_name == 'PEGASUS':
-            sub_model_name = st.selectbox('Select the pre-trained model', ('Large', 'Bigbird', 'CNN / Dailymail', 'x-sum'))
+            sub_model_name = st.selectbox('Select the pre-trained model', ('BART', 'DistilBART'))
 
-            if sub_model_name == 'Bigbird':
+            if sub_model_name == 'BART':
+                _model = "facebook/bart-large-cnn"
+                _max_input_length = 512
+            else:
+                _model = "sshleifer/distilbart-cnn-12-6"
+                _max_input_length = 1024
+        elif model_name == 'T5':
+            sub_model_name = st.selectbox('Select the pre-trained model', ('Small', 'Base', 'Large'))
+
+            if sub_model_name == 'Small':
+                _model = "t5-small"
+                _max_input_length = 512
+            elif sub_model_name == 'Base':
+                _model = "t5-base"
+                _max_input_length = 512
+            else:
+                _model = "t5-large"
+                _max_input_length = 512
+
+        elif model_name == 'Longformer':
+            _model = "patrickvonplaten/longformer2roberta-cnn_dailymail-fp16"
+            _model_tokenizer = "allenai/longformer-base-4096"
+            _max_input_length = 4096
+
+        elif model_name == 'PEGASUS':
+            sub_model_name = st.selectbox('Select the pre-trained model',
+                                          ('Large', 'CNN / Dailymail', 'x-sum'))
+
+            if sub_model_name == 'Bigbird':  # currently disabled
                 _model = "google/bigbird-pegasus-large-arxiv"
                 _max_input_length = 4096
             elif sub_model_name == 'CNN / Dailymail':
@@ -161,11 +174,11 @@ def run_model(input_text):
             model = T5ForConditionalGeneration.from_pretrained(_model)
             tokenizer = T5Tokenizer.from_pretrained(_model)
 
-        elif model_name == "LED":
+        elif model_name == "Longformer":
             from transformers import LongformerTokenizer, EncoderDecoderModel
 
             model = EncoderDecoderModel.from_pretrained(_model)
-            tokenizer = LongformerTokenizer.from_pretrained("allenai/longformer-base-4096")
+            tokenizer = LongformerTokenizer.from_pretrained(_model_tokenizer)
 
         elif model_name == "PEGASUS":
             from transformers import PegasusTokenizer, PegasusForConditionalGeneration
@@ -222,8 +235,8 @@ if st.button('Submit'):
             st.warning("The URL is incorrect. Please try again.")
             st.stop()
         # except ValueError:
-            # print("ValueError")
-            # text = scrap_web2(text)
+        # print("ValueError")
+        # text = scrap_web2(text)
 
     st.info("Your text is being summarized...")
 
