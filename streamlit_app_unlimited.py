@@ -40,11 +40,19 @@ if customize:
             _length_sentences = 5
             _length_sentences = st.number_input("length (in sentences)", value=_length_sentences)
     else:
-        st.caption('* : Due to limited resources, some models are only available in the unlimited version in my GitHub. Here you can experiment with the smaller ones (T5). To run the other models follow the instructions in the README.')
-        model_name = st.selectbox('Select the model', ('T5', 'BART (not available)*', 'Longformer (not available)*', 'PEGASUS (not available)*'))
+        model_name = st.selectbox('Select the model', ('BART', 'T5', 'Longformer', 'PEGASUS'))
 
-        if model_name == 'T5':
-            sub_model_name = st.selectbox('Select the pre-trained model', ('Small', 'Base', 'Large (not available)*'))
+        if model_name == 'BART':
+            sub_model_name = st.selectbox('Select the pre-trained model', ('BART', 'DistilBART'))
+
+            if sub_model_name == 'BART':
+                _model = "facebook/bart-large-cnn"
+                _max_input_length = 512
+            else:
+                _model = "sshleifer/distilbart-cnn-12-6"
+                _max_input_length = 1024
+        elif model_name == 'T5':
+            sub_model_name = st.selectbox('Select the pre-trained model', ('Small', 'Base', 'Large'))
 
             if sub_model_name == 'Small':
                 _model = "t5-small"
@@ -53,29 +61,18 @@ if customize:
                 _model = "t5-base"
                 _max_input_length = 512
             else:
-                _model = "t5-base "#instead of 't5-large' -> to avoid a resources error
+                _model = "t5-large"
                 _max_input_length = 512
 
-        elif model_name == 'BART (not available)*':
-            sub_model_name = st.selectbox('Select the pre-trained model', ('BART', 'DistilBART'))
-            st.stop()
-            if sub_model_name == 'BART':
-                _model = "facebook/bart-large-cnn"
-                _max_input_length = 512
-            else:
-                _model = "sshleifer/distilbart-cnn-12-6"
-                _max_input_length = 1024
-                
-        elif model_name == 'Longformer (not available)*':
-            st.stop()
+        elif model_name == 'Longformer':
             _model = "patrickvonplaten/longformer2roberta-cnn_dailymail-fp16"
             _model_tokenizer = "allenai/longformer-base-4096"
             _max_input_length = 4096
 
-        elif model_name == 'PEGASUS (not available)*':
+        elif model_name == 'PEGASUS':
             sub_model_name = st.selectbox('Select the pre-trained model',
-                                          ('Large', 'CNN / Dailymail', 'x-sum'))                        
-            st.stop()
+                                          ('Large', 'CNN / Dailymail', 'x-sum'))
+
             if sub_model_name == 'Bigbird':  # currently disabled
                 _model = "google/bigbird-pegasus-large-arxiv"
                 _max_input_length = 4096
@@ -168,16 +165,16 @@ def print_time(seconds):
 def run_model(input_text):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if summary_type == 'Abstractive':
-        if model_name == "T5":
+        if model_name == "BART":
+            from transformers import BartTokenizer, BartForConditionalGeneration
+            model = BartForConditionalGeneration.from_pretrained(_model)
+            tokenizer = BartTokenizer.from_pretrained(_model)
+
+        elif model_name == "T5":
             from transformers import T5Tokenizer, T5ForConditionalGeneration
 
             model = T5ForConditionalGeneration.from_pretrained(_model)
             tokenizer = T5Tokenizer.from_pretrained(_model)
-        elif model_name == "BART":
-            from transformers import BartTokenizer, BartForConditionalGeneration
-
-            model = BartForConditionalGeneration.from_pretrained(_model)
-            tokenizer = BartTokenizer.from_pretrained(_model)
 
         elif model_name == "Longformer":
             from transformers import LongformerTokenizer, EncoderDecoderModel
@@ -252,5 +249,3 @@ if st.button('Submit'):
 
     time = end - start
     print_time(time)
-
-st.caption('https://github.com/YanisNC/Text-Summarization-NLP')
