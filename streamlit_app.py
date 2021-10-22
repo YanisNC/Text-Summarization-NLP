@@ -18,9 +18,10 @@ from sumy.summarizers.lsa import LsaSummarizer
 from sumy.summarizers.kl import KLSummarizer
 
 from transformers import pipeline
+from transformers import T5Tokenizer, T5ForConditionalGeneration
 
-nltk.download('punkt')
-nltk.download('stopwords')
+#nltk.download('punkt')
+#nltk.download('stopwords')
 
 st.title('Summarizer')
 st.markdown('Paste a text or link below to summarize it...')
@@ -169,7 +170,7 @@ def run_model(input_text):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if summary_type == 'Abstractive':
         if model_name == "T5":
-            from transformers import T5Tokenizer, T5ForConditionalGeneration
+            #from transformers import T5Tokenizer, T5ForConditionalGeneration
 
             model = T5ForConditionalGeneration.from_pretrained(_model)
             tokenizer = T5Tokenizer.from_pretrained(_model)
