@@ -4,7 +4,7 @@ import bs4 as bs
 import urllib.request
 import re
 import time
-import nltk
+#import nltk
 import validators
 
 from gensim.summarization import summarize as textrank_summarize
@@ -45,16 +45,16 @@ if customize:
         model_name = st.selectbox('Select the model', ('T5', 'BART (not available)*', 'Longformer (not available)*', 'PEGASUS (not available)*'))
 
         if model_name == 'T5':
-            sub_model_name = st.selectbox('Select the pre-trained model', ('Small', 'Base', 'Large (not available)*'))
+            sub_model_name = st.selectbox('Select the pre-trained model', ('Small', 'Base (not available)*', 'Large (not available)*'))
 
             if sub_model_name == 'Small':
                 _model = "t5-small"
                 _max_input_length = 512
-            elif sub_model_name == 'Base':
-                _model = "t5-base"
+            elif sub_model_name == 'Base (not available)*':
+                _model = "t5-small" #instead of 't5-base' -> to avoid a resources error
                 _max_input_length = 512
             else:
-                _model = "t5-base "#instead of 't5-large' -> to avoid a resources error
+                _model = "t5-small " #instead of 't5-large' -> to avoid a resources error
                 _max_input_length = 512
 
         elif model_name == 'BART (not available)*':
