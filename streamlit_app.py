@@ -4,7 +4,7 @@ import bs4 as bs
 import urllib.request
 import re
 import time
-#import nltk
+import nltk
 import validators
 
 from gensim.summarization import summarize as textrank_summarize
@@ -20,8 +20,8 @@ from sumy.summarizers.kl import KLSummarizer
 from transformers import pipeline
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 
-#nltk.download('punkt')
-#nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('stopwords')
 
 st.title('Summarizer')
 st.markdown('Paste a text or link below to summarize it...')
